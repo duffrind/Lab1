@@ -1,0 +1,40 @@
+---
+title: "lab"
+output:
+  word_document: default
+  html_notebook: default
+  # can't do beamer because i don't specify the slide breaks
+---
+
+```{r error=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(install.load)
+install_load('mosaic','ggplot2','devtools','tidyverse','kernlab')
+```
+
+#Intro
+
+A data set collected at Hewlett-Packard Labs, that classifies 4601 e-mails as spam or non-spam. In addition to this class label there are 57 variables indicating the frequency of certain words and characters in the e-mail.
+
+![spammy lappy](http://1.bp.blogspot.com/-PIFQCZsS4aw/Uph5w-9JLcI/AAAAAAAAB7U/vwjjHX2iXuU/s1600/spam-c07.jpg)
+
+```{r echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+data(spam)
+head(spam)
+summary(subset(spam, select=c(money, edu, type)))
+#tapply(subset(spam, select=c(money)), spam$money, summary)
+#library('dplyr')
+#spam %>% group_by(money) %>% summarize(mean=mean(money), sum=sum(money))
+```
+
+The percentage of emails that are spam in the dataset is `r sum(spam$type=='spam')/length(spam$type) `
+
+```{r}
+plot(spam$meeting ~ spam$type)
+plot()
+plot()
+```
+
+
+
+
+
