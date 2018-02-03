@@ -1,17 +1,37 @@
 ---
-title: "lab"
+title: "Lab 1"
+author: "David Duffrin"
 output:
-  word_document: default
-  html_notebook: default
-  # can't do beamer because i don't specify the slide breaks
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '2'
+    toc_float: true
+  word_document:
+    df_print: kable
+    fig_caption: yes
+    fig_height: 5
+    fig_width: 5
+    toc: yes
+    toc_depth: 2
+    toc_float: true
+  pdf_document:
+    df_print: kable
+    toc: yes
+    toc_depth: 2
+    toc_float: true
 ---
+
+\newpage
+
+# Lab 1
 
 ```{r error=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 library(install.load)
-install_load('mosaic','ggplot2','devtools','tidyverse','kernlab')
+install_load('mosaic','ggplot2','devtools','tidyverse','kernlab', 'caret', 'pROC')
 ```
 
-#Intro
+## Intro
 
 A data set collected at Hewlett-Packard Labs, that classifies 4601 e-mails as spam or non-spam. In addition to this class label there are 57 variables indicating the frequency of certain words and characters in the e-mail.
 
@@ -28,13 +48,45 @@ summary(subset(spam, select=c(money, edu, type)))
 
 The percentage of emails that are spam in the dataset is `r sum(spam$type=='spam')/length(spam$type) `
 
-```{r}
-plot(spam$meeting ~ spam$type)
-plot()
-plot()
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+attach(spam)
+plot(meeting ~ type)
+
+ggplot(spam, aes(x=factor(type), y=edu)) + geom_violin()# + geom_jitter(height = 0, width = 0.1)
 ```
 
+## Data Analysis
 
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+# taken from https://gist.github.com/primaryobjects/3b7ab0ca27e79bde55e5
 
+## set the seed to make your partition reproductible
+set.seed(123)
+inTrain <- createDataPartition(y = type, p=0.6, list=FALSE)
+training <- spam[inTrain,]
+testing <- spam[-inTrain,]
+fit <- train(type ~ ., data=training, method='glm', family=binomial())
 
+# Show statistical significance of coefficients (terms).
+#summary(fit) # output is too long
 
+# Show accuracy on training set.
+fit
+
+# Run model on test set.
+results <- predict(fit, newdata = testing)
+
+# Show accuracy on test set.
+confusionMatrix(results, testing$type)
+
+testing$typeNum <- ifelse(testing$type == 'spam', 1, 0)
+resultsNum <- ifelse(results == 'spam', 1, 0)
+
+auc <- roc(testing$typeNum, resultsNum)
+
+auc
+
+detach()
+```
+
+My test dataset contains `r sum(training$type == 'nonspam') / nrow(training) * 100 ` percent nonspam emails, so I will use this as a baseline for accuracy. After training a binomial model on `r nrow(training) / nrow(spam) * 100` percent of the data, I predicted the type of email in the test dataset (which consisted of the remaining rows). I got an accuracy of `r fit$results$Accuracy ` and AUC of `r as.numeric(auc$auc) `.
